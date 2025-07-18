@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Form Absensi</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .form-group { margin-bottom: 15px; }
+    .preview-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; }
+  </style>
+  <script>
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+      } else {
+        alert("Geolocation tidak didukung oleh browser ini.");
+      }
+    }
+
+    function showPosition(position) {
+      document.getElementById("latitude").value = position.coords.latitude;
+      document.getElementById("longitude").value = position.coords.longitude;
+    }
+
+    function showError(error) {
+      alert("Gagal mengambil lokasi: " + error.message);
+    }
+
+    function previewImage(event) {
+      const reader = new FileReader();
+      reader.onload = function(){
+        const output = document.getElementById('preview');
+        output.src = reader.result;
+      };
+      reader.readAsDataURL(event.target.files[0]);
+    }
+  </script>
+</head>
+<body onload="getLocation()">
+
+  <h2>Absensi Online</h2>
+  <form id="absensiForm">
+    <div class="form-group">
+      <label>NIK:</label><br>
+      <input type="text" name="nik" required>
+    </div>
+
+    <div class="form-group">
+      <label>Foto Selfie:</label><br>
+      <input type="file" name="foto" accept="image/*" capture="user" onchange="previewImage(event)" required><br><br>
+      <img id="preview" class="preview-img" src="https://via.placeholder.com/120" alt="Preview">
+    </div>
+
+    <input type="hidden" name="latitude" id="latitude">
+    <input type="hidden" name="longitude" id="longitude">
+
+    <button type="submit">Kirim</button>
+  </form>
+
+  <div id="status"></div>
+
+  <script>
+    document.getElementById("absensiForm").addEventListener("submit", function(event){
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+
+      fetch("https://script.google.com/macros/s/AKfycbyMjoPEyCihUBxy_vwIhImFRNQJpaN6JzpsbbNaazCBmEcgUw8q8C2jdDXx3p5l6ilx/exec", {
+        method: "POST",
+        body: formData
+      })
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById("status").innerText = data;
+        form.reset();
+        document.getElementById("preview").src = "https://via.placeholder.com/120";
+      })
+      .catch(err => alert("Gagal mengirim absensi: " + err));
+    });
+  </script>
+
+</body>
+</html>
